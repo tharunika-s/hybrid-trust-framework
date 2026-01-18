@@ -3,13 +3,14 @@
     "id": 1,
     "name": "Rice Bag",
     "vendorId": 1,
-    "price": 1200
+    "price": 1200,
+    "productTrust": 72
   },
   {
     "id": 2,
     "name": "LED Bulb",
     "vendorId": 2,
-    "price": 150
+    "price": 150,
+    "productTrust": 55
   }
 ]
-
