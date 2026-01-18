@@ -1,1 +1,15 @@
+[
+  {
+    "id": 1,
+    "name": "Rice Bag",
+    "vendorId": 1,
+    "price": 1200
+  },
+  {
+    "id": 2,
+    "name": "LED Bulb",
+    "vendorId": 2,
+    "price": 150
+  }
+]
 
