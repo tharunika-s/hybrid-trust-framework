@@ -1,1 +1,25 @@
+[
+  {
+    "id": 1,
+    "name": "Sri Lakshmi Stores",
+    "wallet": "0xABC123...",
+    "lat": 13.0827,
+    "lng": 80.2707,
+    "identity": 90,
+    "social": 85,
+    "consistency": 80,
+    "documents": 70
+  },
+  {
+    "id": 2,
+    "name": "Metro Electronics",
+    "wallet": "0xDEF456...",
+    "lat": 13.084,
+    "lng": 80.268,
+    "identity": 75,
+    "social": 65,
+    "consistency": 60,
+    "documents": 60
+  }
+]
 
