@@ -1,37 +1,26 @@
 const express = require("express");
 const router = express.Router();
-const vendors = require("../data/vendors.json");
-const { calculateTrustScore } = require("../services/trustScore");
+const pool = require("../db");
 
-// Get all vendors with trust score
-router.get("/", (req, res) => {
-  const result = vendors.map(v => ({
-    ...v,
-    trustScore: calculateTrustScore(
-      v.identity,
-      v.social,
-      v.consistency,
-      v.documents
-    )
-  }));
+// GET all vendors with trust score
+router.get("/", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM vendors");
 
-  res.json(result);
-});
+    const vendors = result.rows.map(v => ({
+      ...v,
+      trustScore:
+        0.4 * v.identity +
+        0.3 * v.behaviour +
+        0.2 * v.consistency +
+        0.1 * v.compliance,
+    }));
 
-// Get single vendor details
-router.get("/:id", (req, res) => {
-  const vendor = vendors.find(v => v.id == req.params.id);
-  if (!vendor) return res.status(404).json({ error: "Vendor not found" });
-
-  vendor.trustScore = calculateTrustScore(
-    vendor.identity,
-    vendor.social,
-    vendor.consistency,
-    vendor.documents
-  );
-
-  res.json(vendor);
+    res.json(vendors);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Database error" });
+  }
 });
 
 module.exports = router;
-
