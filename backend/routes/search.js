@@ -2,51 +2,34 @@ const express = require("express");
 const router = express.Router();
 const pool = require("../db");
 
-// GET /search?q=rice
+// /search?q=rice
 router.get("/", async (req, res) => {
   const { q } = req.query;
 
-  if (!q) {
-    return res.status(400).json({ error: "Query missing" });
+  if (!q) return res.json([]);
+
+  try {
+    const result = await pool.query(
+      `
+      SELECT 
+        p.id AS product_id,
+        p.name AS product_name,
+        p.price,
+        v.id AS vendor_id,
+        v.name AS vendor_name,
+        v.trustscore
+      FROM products p
+      JOIN vendors v ON p.vendor_id = v.id
+      WHERE LOWER(p.name) LIKE LOWER($1)
+      `,
+      [`%${q}%`]
+    );
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Search failed" });
   }
-
-  const result = await pool.query(
-    `
-    SELECT 
-      v.id as vendor_id,
-      v.name as vendor,
-      v.wallet,
-      v.identity,
-      v.behaviour,
-      v.consistency,
-      v.compliance,
-      p.name as product,
-      p.price
-    FROM products p
-    JOIN vendors v ON p.vendor_id = v.id
-    WHERE LOWER(p.name) LIKE LOWER($1)
-    `,
-    [`%${q}%`]
-  );
-
-  const response = result.rows.map(r => {
-    const trustScore =
-      0.4 * r.identity +
-      0.3 * r.behaviour +
-      0.2 * r.consistency +
-      0.1 * r.compliance;
-
-    return {
-      vendorId: r.vendor_id,
-      vendor: r.vendor,
-      wallet: r.wallet,
-      product: r.product,
-      price: r.price,
-      trustScore: Number(trustScore.toFixed(1))
-    };
-  });
-
-  res.json(response);
 });
 
 module.exports = router;
