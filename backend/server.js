@@ -12,4 +12,6 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log("Backend running on port", PORT);
 });
+app.use("/discover", require("./routes/discover"));
 
+app.use("/search", require("./routes/search"));
