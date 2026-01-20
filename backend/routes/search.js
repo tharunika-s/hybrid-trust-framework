@@ -1,33 +1,58 @@
 const express = require("express");
 const router = express.Router();
-const pool = require("../db");
+const db = require("../db");
 
-// /search?q=rice
 router.get("/", async (req, res) => {
-  const { q } = req.query;
-
-  if (!q) return res.json([]);
+  console.log("➡️ /search called on Azure");
 
   try {
-    const result = await pool.query(
-      `
-      SELECT 
-        p.id AS product_id,
-        p.name AS product_name,
-        p.price,
-        v.id AS vendor_id,
-        v.name AS vendor_name,
-        v.trustscore
-      FROM products p
-      JOIN vendors v ON p.vendor_id = v.id
-      WHERE LOWER(p.name) LIKE LOWER($1)
-      `,
-      [`%${q}%`]
-    );
+    const q = req.query.q;
+    console.log("Query param:", q);
 
-    res.json(result.rows);
+    let sql;
+    let params = [];
+
+    if (!q || q.trim() === "") {
+      sql = `
+        SELECT 
+          p.name AS product,
+          v.name AS vendor,
+          (
+            0.4 * v.identity +
+            0.3 * v.behaviour +
+            0.2 * v.consistency +
+            0.1 * v.compliance
+          ) AS "vendorTrust"
+        FROM products p
+        JOIN vendors v ON p.vendor_id = v.id
+        LIMIT 10;
+      `;
+    } else {
+      sql = `
+        SELECT 
+          p.name AS product,
+          v.name AS vendor,
+          (
+            0.4 * v.identity +
+            0.3 * v.behaviour +
+            0.2 * v.consistency +
+            0.1 * v.compliance
+          ) AS "vendorTrust"
+        FROM products p
+        JOIN vendors v ON p.vendor_id = v.id
+        WHERE p.name ILIKE $1
+        LIMIT 10;
+      `;
+      params = [`%${q}%`];
+    }
+
+    console.log("Executing SQL on Azure...");
+    const { rows } = await db.query(sql, params);
+    console.log("Rows returned:", rows.length);
+
+    res.json(rows);
   } catch (err) {
-    console.error(err);
+    console.error("🔥 SEARCH ERROR ON AZURE:", err.message);
     res.status(500).json({ error: "Search failed" });
   }
 });
