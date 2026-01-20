@@ -3,16 +3,13 @@ const router = express.Router();
 const db = require("../db");
 
 router.get("/", async (req, res) => {
-  console.log("➡️ /search called on Azure");
-
   try {
-    const q = req.query.q;
-    console.log("Query param:", q);
+    const q = req.query.q?.trim();
 
     let sql;
     let params = [];
 
-    if (!q || q.trim() === "") {
+    if (!q) {
       sql = `
         SELECT 
           p.name AS product,
@@ -25,7 +22,8 @@ router.get("/", async (req, res) => {
           ) AS "vendorTrust"
         FROM products p
         JOIN vendors v ON p.vendor_id = v.id
-        LIMIT 10;
+        ORDER BY "vendorTrust" DESC
+        LIMIT 100;
       `;
     } else {
       sql = `
@@ -41,19 +39,26 @@ router.get("/", async (req, res) => {
         FROM products p
         JOIN vendors v ON p.vendor_id = v.id
         WHERE p.name ILIKE $1
-        LIMIT 10;
+        ORDER BY "vendorTrust" DESC
+        LIMIT 100;
       `;
       params = [`%${q}%`];
     }
 
-    console.log("Executing SQL on Azure...");
     const { rows } = await db.query(sql, params);
-    console.log("Rows returned:", rows.length);
 
-    res.json(rows);
+    // 🔒 ALWAYS same shape
+    res.json({
+      success: true,
+      count: rows.length,
+      results: rows
+    });
   } catch (err) {
-    console.error("🔥 SEARCH ERROR ON AZURE:", err.message);
-    res.status(500).json({ error: "Search failed" });
+    console.error("Search error:", err);
+    res.status(500).json({
+      success: false,
+      results: []
+    });
   }
 });
 
